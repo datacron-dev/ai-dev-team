@@ -1,0 +1,53 @@
+{
+  "_comment": "MCP servers for the ai-dev-team dev environment. Secrets are NOT stored in this file — they are read from the shell environment, which is populated from ~/ai-dev-team/shared/credentials/.env. This means: (1) rotate keys in .env only, (2) never edit this file for a key change, (3) always launch your harness from a shell that has sourced .env. Commands assume `uvx` and `npx` are on your PATH (uv installs to ~/.local/bin).",
+  "_env_source": "~/ai-dev-team/shared/credentials/.env",
+  "_required_env_by_server": {
+    "github": ["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    "polygon": ["POLYGON_API_KEY"],
+    "alpaca_backup": ["ALPACA_API_KEY", "ALPACA_SECRET_KEY", "PAPER"],
+    "redis": ["REDIS_URL"]
+  },
+
+  "mcpServers": {
+    "github": {
+      "_purpose": "GitHub official MCP server (repos, issues, PRs, code search, actions). Runs in Docker. Reads GITHUB_PERSONAL_ACCESS_TOKEN from shell env.",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e", "GITHUB_TOOLSETS=repos,issues,pull_requests,actions,code_security",
+        "ghcr.io/github/github-mcp-server"
+      ]
+    },
+
+    "polygon": {
+      "_purpose": "Polygon.io market data. Reads POLYGON_API_KEY from shell env.",
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/polygon-io/mcp_polygon", "mcp_polygon"]
+    },
+
+    "alpaca_backup": {
+      "_purpose": "Alpaca trading — paper by default via PAPER=True. Reads ALPACA_* from shell env.",
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/alpacahq/alpaca-mcp-server", "alpaca-mcp-server"]
+    },
+
+    "redis": {
+      "_purpose": "Redis operations. Reads REDIS_URL from shell env (defaults to redis://localhost:6379).",
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/redis/mcp-redis.git", "redis-mcp-server"]
+    },
+
+    "docker": {
+      "_purpose": "Container operations — start/stop, compose, logs. Requires Docker daemon running.",
+      "command": "uvx",
+      "args": ["docker-mcp"]
+    },
+
+    "playwright": {
+      "_purpose": "Headless-browser automation. First run downloads browsers (~300MB).",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    }
+  }
+}
