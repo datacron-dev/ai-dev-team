@@ -21,7 +21,7 @@ ai-dev-team/
 │   ├── bin/               ← ms-status pre-flight checker
 │   └── templates/         ← boilerplate for new projects and new skills
 ├── scripts/               ← the two launch/bridge scripts
-│   ├── mothership-launch.sh
+│   ├── ai-dev-team-launch.sh
 │   └── cline_vllm_proxy.py
 └── projects/              ← your projects go here (empty in this repo)
 ```
@@ -130,15 +130,15 @@ nohup python3 scripts/cline_vllm_proxy.py > logs/cline-vllm-bridge.log 2>&1 &
 
 **When you can skip it:** if your vLLM already serves on a fixed port (e.g. `http://localhost:8000/v1`), just point Cline at that directly — no bridge needed. The bridge is purely for the dynamic-port case.
 
-### 2. `mothership-launch.sh` — service manager
+### 2. `ai-dev-team-launch.sh` — service manager
 
 A small service supervisor that can start/stop/status the bridge (and any service you add to its `SERVICES` array). It auto-detects the ai-dev-team root as the parent of `scripts/`, so it works wherever the repo is cloned.
 
 ```bash
-scripts/mothership-launch.sh status    # one-line status of all services
-scripts/mothership-launch.sh start vllm-bridge
-scripts/mothership-launch.sh stop vllm-bridge
-scripts/mothership-launch.sh           # interactive menu
+scripts/ai-dev-team-launch.sh status    # one-line status of all services
+scripts/ai-dev-team-launch.sh start vllm-bridge
+scripts/ai-dev-team-launch.sh stop vllm-bridge
+scripts/ai-dev-team-launch.sh           # interactive menu
 ```
 
 It can manage services two ways:

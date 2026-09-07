@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # ai-dev-team launch script — desktop launcher & service manager.
 # The ai-dev-team root is auto-detected as the parent of this scripts/ folder,
-# so it works wherever you clone it. Override with MOTHERSHIP_ROOT if needed.
+# so it works wherever you clone it. Override with AI_DEV_TEAM_ROOT if needed.
 # Extensible: register a service by adding one line to the SERVICES array.
 # Usage:
-#   mothership-launch.sh            # interactive menu (desktop icon uses this)
-#   mothership-launch.sh status     # one-line status of all services
-#   mothership-launch.sh start <name>|stop <name>|restart <name>
+#   ai-dev-team-launch.sh            # interactive menu (desktop icon uses this)
+#   ai-dev-team-launch.sh status     # one-line status of all services
+#   ai-dev-team-launch.sh start <name>|stop <name>|restart <name>
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Default root = parent of this scripts/ folder (i.e. the ai-dev-team checkout).
-export MOTHERSHIP_ROOT="${MOTHERSHIP_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
-ENV_FILE="${MOTHERSHIP_ENV:-$MOTHERSHIP_ROOT/.env}"
-export MOTHERSHIP_LOG_DIR="${MOTHERSHIP_LOG_DIR:-$MOTHERSHIP_ROOT/logs}"
-export MOTHERSHIP_PID_DIR="${MOTHERSHIP_PID_DIR:-$MOTHERSHIP_ROOT/run}"
-mkdir -p "$MOTHERSHIP_LOG_DIR" "$MOTHERSHIP_PID_DIR"
+export AI_DEV_TEAM_ROOT="${AI_DEV_TEAM_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ENV_FILE="${AI_DEV_TEAM_ENV:-$AI_DEV_TEAM_ROOT/.env}"
+export AI_DEV_TEAM_LOG_DIR="${AI_DEV_TEAM_LOG_DIR:-$AI_DEV_TEAM_ROOT/logs}"
+export AI_DEV_TEAM_PID_DIR="${AI_DEV_TEAM_PID_DIR:-$AI_DEV_TEAM_ROOT/run}"
+mkdir -p "$AI_DEV_TEAM_LOG_DIR" "$AI_DEV_TEAM_PID_DIR"
 
 # Load env so desktop-launched services inherit your keys (desktop icons normally don't).
 [ -f "$ENV_FILE" ] && { set -a; . "$ENV_FILE"; set +a; }
@@ -69,10 +69,10 @@ do_start() {
   else
     pgrep -f "$pat" >/dev/null 2>&1 && { echo "${Cy}$name already running${C0}"; return; }
     # shellcheck disable=SC2086
-    ( cd "$SCRIPT_DIR" && nohup $arg >"$MOTHERSHIP_LOG_DIR/$name.log" 2>&1 & echo $! >"$MOTHERSHIP_PID_DIR/$name.pid" )
+    ( cd "$SCRIPT_DIR" && nohup $arg >"$AI_DEV_TEAM_LOG_DIR/$name.log" 2>&1 & echo $! >"$AI_DEV_TEAM_PID_DIR/$name.pid" )
     sleep 1
     pgrep -f "$pat" >/dev/null 2>&1 && echo "${Cg}started $name${C0}" \
-      || echo "${Cr}failed to start $name — see $MOTHERSHIP_LOG_DIR/$name.log${C0}"
+      || echo "${Cr}failed to start $name — see $AI_DEV_TEAM_LOG_DIR/$name.log${C0}"
   fi
 }
 
@@ -82,8 +82,8 @@ do_stop() {
   if [ "$kind" = systemd ]; then
     systemctl --user stop "$arg" && echo "${Cg}stopped $name${C0}"
   else
-    [ -f "$MOTHERSHIP_PID_DIR/$name.pid" ] && kill "$(cat "$MOTHERSHIP_PID_DIR/$name.pid")" 2>/dev/null
-    rm -f "$MOTHERSHIP_PID_DIR/$name.pid"
+    [ -f "$AI_DEV_TEAM_PID_DIR/$name.pid" ] && kill "$(cat "$AI_DEV_TEAM_PID_DIR/$name.pid")" 2>/dev/null
+    rm -f "$AI_DEV_TEAM_PID_DIR/$name.pid"
     pkill -f "$pat" 2>/dev/null
     echo "${Cg}stopped $name${C0}"
   fi
