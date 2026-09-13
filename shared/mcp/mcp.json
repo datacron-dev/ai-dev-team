@@ -1,0 +1,66 @@
+{
+  "_comment": "MCP servers for the dev-team dev environment. Secrets are NOT stored in this file — they are read from the shell environment, which is populated from ~/dev-team/shared/credentials/.env by the block in ~/.bashrc. This means: (1) rotate keys in .env only, (2) never edit this file for a key change, (3) always launch your harness from a shell that has sourced .bashrc.",
+  "_env_source": "~/dev-team/shared/credentials/.env",
+  "_required_env_by_server": {
+    "github": ["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    "polygon": ["POLYGON_API_KEY"],
+    "alpaca_backup": ["ALPACA_API_KEY", "ALPACA_SECRET_KEY", "PAPER"],
+    "redis": ["REDIS_URL"],
+    "graphify": []
+  },
+
+  "mcpServers": {
+    "github": {
+      "_purpose": "GitHub official MCP server (repos, issues, PRs, code search, actions). Runs in Docker. Reads GITHUB_PERSONAL_ACCESS_TOKEN from shell env.",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e", "GITHUB_TOOLSETS=repos,issues,pull_requests,actions,code_security",
+        "ghcr.io/github/github-mcp-server"
+      ]
+    },
+
+    "polygon": {
+      "_purpose": "Polygon.io market data. Reads POLYGON_API_KEY from shell env.",
+      "command": "/home/ai-dev/.local/bin/uvx",
+      "args": ["--from", "git+https://github.com/polygon-io/mcp_polygon", "mcp_polygon"]
+    },
+
+    "alpaca_backup": {
+      "_purpose": "Alpaca trading — paper by default via PAPER=True. Reads ALPACA_* from shell env.",
+      "command": "/home/ai-dev/.local/bin/uvx",
+      "args": ["--from", "git+https://github.com/alpacahq/alpaca-mcp-server", "alpaca-mcp-server"]
+    },
+
+    "redis": {
+      "_purpose": "Redis operations. Reads REDIS_URL from shell env (defaults to redis://localhost:6379).",
+      "command": "/home/ai-dev/.local/bin/uvx",
+      "args": ["--from", "git+https://github.com/redis/mcp-redis.git", "redis-mcp-server"]
+    },
+
+    "docker": {
+      "_purpose": "Container operations — start/stop, compose, logs. Requires Docker daemon running.",
+      "command": "/home/ai-dev/.local/bin/uvx",
+      "args": ["docker-mcp"]
+    },
+
+    "playwright": {
+      "_purpose": "Headless-browser automation. First run downloads browsers (~300MB).",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+
+    "graphify": {
+      "_purpose": "Graphify knowledge-graph queries (query_graph, get_node, get_neighbors, god_nodes, graph_stats, shortest_path, PR blast-radius). The server is served per-project: it loads <project>/graphify-out/graph.json. Point it at the right graph via the env block below — GRAPHIFY_PROJECT_DIR for the project, or GRAPHIFY_GRAPH_JSON for an explicit graph.json path. No API key needed.",
+      "command": "/home/ai-dev/dev-team/shared/mcp/graphify/graphify-mcp-launcher.sh",
+      "args": [],
+      "env": {
+        "GRAPHIFY_PROJECT_DIR": "/home/ai-dev/dev-team/projects/financial-terminal",
+        "GRAPHIFY_OUT": "graphify-out"
+      },
+      "_http_transport": "For a shared/deployment HTTP endpoint, launch instead: GRAPHIFY_API_KEY=... graphify-mcp --transport http --host 127.0.0.1 --port 8080. The stdio launcher above is the default for per-developer harnesses.",
+      "_build_hint": "If no graph exists yet, build one first: cd <project> && graphify update <project> (creates <project>/graphify-out/graph.json; re-run after big changes, or 'graphify watch <project>' to rebuild on edit)."
+    }
+  }
+}
